@@ -1,26 +1,20 @@
-FROM node:16
+# Use an official Node.js runtime as the base image
+FROM node:14
 
-WORKDIR /home/node
-COPY --chown=node:node . .
+# Set the working directory in the container
+WORKDIR /app
 
-ARG BUILD_EXPIRE
-ARG BUILD_DOMAIN
-ARG REACT_APP_SENTRY_KEY=${REACT_APP_SENTRY_KEY:-""}
-ARG REACT_APP_SENTRY_ORGANIZATION=${REACT_APP_SENTRY_ORGANIZATION:-""}
-ARG REACT_APP_SENTRY_PROJECT=${REACT_APP_SENTRY_PROJECT:-""}
+# Copy the package.json and package-lock.json files to the container
+COPY package*.json ./
 
-USER node
-
-ENV REACT_APP_SENTRY_KEY=${REACT_APP_SENTRY_KEY}
-ENV REACT_APP_SENTRY_ORGANIZATION=${REACT_APP_SENTRY_ORGANIZATION}
-ENV REACT_APP_SENTRY_PROJECT=${REACT_APP_SENTRY_PROJECT}
-
+# Install the application dependencies
 RUN yarn install
-RUN chmod -R 777 ./scripts/build.sh
-RUN ./scripts/build.sh
 
-FROM nginx:mainline-alpine
+# Copy the rest of the application files to the container
+COPY . .
 
-COPY --from=builder /home/node/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Expose the port that the application will be listening on
 EXPOSE 3000
+
+# Specify the command to run the application
+CMD [ "yarn", "start" ]
